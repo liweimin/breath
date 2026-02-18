@@ -19,6 +19,13 @@ python -m http.server 5500
 
 - `docs/MVP-需求文档.md`
 - `docs/技术方案.md`
+- `docs/项目现状.md`
+- `docs/环境与命令.md`
+- `docs/架构说明.md`
+- `docs/关键决策.md`
+- `docs/已知问题.md`
+- `docs/迭代计划.md`
+- `docs/迭代日志.md`
 
 ## 关于 `file://` 打开时的导出
 
@@ -39,3 +46,16 @@ powershell -ExecutionPolicy Bypass -File scripts\generate-audio-data.ps1
 2. 在 Vercel 中 `New Project` -> `Import Git Repository` -> 选择这个仓库。
 3. `Framework Preset` 选 `Other`。
 4. `Build Command` 留空；`Output Directory` 填 `.`（项目根目录）。
+
+## 下次用 Codex / Claude Code 继续优化（建议流程）
+
+1. 先同步代码并确认基线：
+```bash
+git pull
+git log --oneline -n 5
+```
+2. 先让 AI 读取这几份文档：`docs/项目现状.md`、`docs/架构说明.md`、`docs/已知问题.md`、`docs/迭代计划.md`。
+3. 一次只提一个明确目标（例如“修复某浏览器声音兼容”），并写清验收标准（在哪些设备/浏览器通过）。
+4. 要求 AI 先给“修改点清单”，你确认后再提交和推送。
+5. 每轮改动后按顺序验证：本地 HTTP -> 手机 Chrome -> 线上 Vercel。
+6. 合并后更新 `docs/迭代日志.md` 和 `docs/项目现状.md`，保证下一次可以无缝衔接。
