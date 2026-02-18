@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>呼吸冥想引导</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app">
+    <section class="panel intro">
+      <p class="eyebrow">Mindful Breathing</p>
+      <h1>呼吸冥想引导</h1>
+      <p class="hint">点击开始后将启用声音。流程为 吸气 → 暂停 → 呼气 → 暂停。</p>
+    </section>
+
+    <section class="panel controls-panel">
+      <form id="settings-form" class="settings-form" novalidate>
+        <label>
+          吸气（秒）
+          <input id="inhale-seconds" name="inhaleSeconds" type="number" min="1" step="1" value="4" required>
+        </label>
+        <label>
+          暂停1（秒）
+          <input id="hold1-seconds" name="hold1Seconds" type="number" min="0" step="1" value="4" required>
+        </label>
+        <label>
+          呼气（秒）
+          <input id="exhale-seconds" name="exhaleSeconds" type="number" min="1" step="1" value="4" required>
+        </label>
+        <label>
+          暂停2（秒）
+          <input id="hold2-seconds" name="hold2Seconds" type="number" min="0" step="1" value="4" required>
+        </label>
+        <label>
+          总时长（分钟）
+          <input id="total-minutes" name="totalMinutes" type="number" min="1" step="1" value="5" required>
+        </label>
+        <label>
+          音量
+          <input id="volume" name="volume" type="range" min="0" max="100" step="1" value="80">
+        </label>
+        <label class="mute">
+          <input id="mute" name="mute" type="checkbox">
+          <span>静音</span>
+        </label>
+      </form>
+
+      <div class="button-row">
+        <button id="start-button" type="button">开始</button>
+        <button id="pause-button" type="button" disabled>暂停</button>
+        <button id="resume-button" type="button" disabled>继续</button>
+        <button id="stop-button" type="button" disabled>停止并重置</button>
+      </div>
+      <div class="export-row">
+        <button id="download-mix-button" type="button">下载完整音频</button>
+      </div>
+      <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+      <p id="download-status" class="download-status" role="status" aria-live="polite"></p>
+      <div class="progress-wrap" aria-hidden="true">
+        <progress id="download-progress" max="100" value="0"></progress>
+      </div>
+    </section>
+
+    <section id="session-panel" class="panel session-panel">
+      <div id="orb-wrapper" class="orb-wrapper phase-idle">
+        <div class="flow-layer flow-a"></div>
+        <div class="flow-layer flow-b"></div>
+        <div class="particle p1"></div>
+        <div class="particle p2"></div>
+        <div class="particle p3"></div>
+        <div class="particle p4"></div>
+        <div class="particle p5"></div>
+        <div class="particle p6"></div>
+        <div class="orb-glow"></div>
+        <div id="breath-orb" class="breath-orb"></div>
+      </div>
+      <div class="session-stats">
+        <p id="phase-name" class="phase-name">未开始</p>
+        <p id="phase-remaining" class="phase-remaining">阶段剩余 00:00</p>
+        <p id="total-remaining" class="total-remaining">总剩余 00:00</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

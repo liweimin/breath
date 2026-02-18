@@ -1,0 +1,6 @@
+.vercel/
+node_modules/
+audio-data.js
+*.wav
+.DS_Store
+Thumbs.db
