@@ -8,7 +8,7 @@ const PHASES = [
 ];
 
 const SAMPLE_FILES = {
-  exhale: "assets/audio/exhale-light-short.ogg"
+  exhale: "assets/audio/exhale-light-short.mp3"
 };
 
 const elements = {
