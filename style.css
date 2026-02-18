@@ -85,6 +85,24 @@ h1 {
   margin: 10px 0 0;
   color: var(--soft-ink);
   font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.support {
+  margin: 8px 0 0;
+  color: var(--soft-ink);
+  font-size: 0.9rem;
+}
+
+.support a {
+  color: #2f6b62;
+  text-decoration: none;
+  border-bottom: 1px dashed rgba(47, 107, 98, 0.45);
+}
+
+.support a:hover {
+  color: #23574f;
+  border-bottom-color: rgba(35, 87, 79, 0.65);
 }
 
 .controls-panel {
