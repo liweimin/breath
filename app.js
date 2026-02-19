@@ -12,6 +12,12 @@ const SAMPLE_FILES = {
 };
 
 const elements = {
+  appRoot: document.getElementById("app-root"),
+  controlsPanel: document.getElementById("controls-panel"),
+  settingsBody: document.getElementById("settings-body"),
+  toggleSettingsButton: document.getElementById("toggle-settings-button"),
+  settingsSummary: document.getElementById("settings-summary"),
+  rhythmSummary: document.getElementById("rhythm-summary"),
   form: document.getElementById("settings-form"),
   inhale: document.getElementById("inhale-seconds"),
   hold1: document.getElementById("hold1-seconds"),
@@ -47,6 +53,7 @@ const state = {
   pausedAtMs: 0,
   elapsedWhenPausedMs: 0,
   totalDurationMs: 0,
+  setupSettingsCollapsed: false,
   stopAfterCycle: false,
   timerId: null,
   currentOrbScale: 1,
@@ -436,7 +443,9 @@ initialize();
 
 function initialize() {
   loadSettings();
+  updateSettingsSummary();
   bindEvents();
+  setSettingsCollapsed(state.setupSettingsCollapsed);
   renderIdleView();
   updateButtons();
 }
@@ -447,24 +456,36 @@ function bindEvents() {
   elements.resumeButton.addEventListener("click", handleResume);
   elements.stopButton.addEventListener("click", handleStopReset);
   elements.downloadMixButton.addEventListener("click", handleDownloadMix);
+  elements.toggleSettingsButton.addEventListener("click", handleToggleSettings);
 
   elements.form.addEventListener("input", () => {
     if (state.runState === "idle" || state.runState === "finished") {
       clearFeedback();
     }
+    updateSettingsSummary();
     saveSettings();
   });
 
   elements.volume.addEventListener("input", () => {
     const volume = Number(elements.volume.value) / 100;
     audio.setVolume(volume);
+    updateSettingsSummary();
     saveSettings();
   });
 
   elements.mute.addEventListener("change", () => {
     audio.setMuted(elements.mute.checked);
+    updateSettingsSummary();
     saveSettings();
   });
+}
+
+function handleToggleSettings() {
+  if (isSessionActive()) {
+    return;
+  }
+  state.setupSettingsCollapsed = !state.setupSettingsCollapsed;
+  setSettingsCollapsed(state.setupSettingsCollapsed);
 }
 
 async function handleStart() {
@@ -708,15 +729,16 @@ function updateButtons() {
   const running = state.runState === "running";
   const paused = state.runState === "paused";
   const idleLike = state.runState === "idle" || state.runState === "finished";
-  const active = running || paused;
+  const active = isSessionActive();
 
   elements.startButton.disabled = !idleLike;
   elements.pauseButton.disabled = !running;
   elements.resumeButton.disabled = !paused;
   elements.stopButton.disabled = idleLike;
   elements.downloadMixButton.disabled = state.exportInProgress;
+  elements.toggleSettingsButton.disabled = active;
   setSettingsLocked(active);
-  document.body.classList.toggle("session-active", active);
+  syncLayoutMode(active);
 }
 
 function setSettingsLocked(locked) {
@@ -724,6 +746,47 @@ function setSettingsLocked(locked) {
   for (const input of inputs) {
     input.disabled = locked;
   }
+}
+
+function isSessionActive() {
+  return state.runState === "running" || state.runState === "paused";
+}
+
+function syncLayoutMode(active) {
+  elements.appRoot.classList.toggle("mode-session", active);
+  elements.appRoot.classList.toggle("mode-setup", !active);
+  if (active) {
+    setSettingsCollapsed(true);
+    return;
+  }
+  setSettingsCollapsed(state.setupSettingsCollapsed);
+}
+
+function setSettingsCollapsed(collapsed) {
+  elements.controlsPanel.classList.toggle("settings-collapsed", collapsed);
+  elements.settingsBody.setAttribute("aria-hidden", collapsed ? "true" : "false");
+  elements.toggleSettingsButton.setAttribute("aria-expanded", collapsed ? "false" : "true");
+  elements.toggleSettingsButton.textContent = collapsed ? "展开参数" : "收起参数";
+}
+
+function updateSettingsSummary() {
+  const inhale = parseInteger(elements.inhale.value);
+  const hold1 = parseInteger(elements.hold1.value);
+  const exhale = parseInteger(elements.exhale.value);
+  const hold2 = parseInteger(elements.hold2.value);
+  const totalMinutes = parseInteger(elements.totalMinutes.value);
+  const volume = parseInteger(elements.volume.value);
+
+  const formatPart = (value, minValue = 0) => (
+    Number.isInteger(value) && value >= minValue ? String(value) : "--"
+  );
+  const rhythm = `${formatPart(inhale, 1)}-${formatPart(hold1)}-${formatPart(exhale, 1)}-${formatPart(hold2)}`;
+  const minuteText = `${formatPart(totalMinutes, 1)} 分钟`;
+  const volumeText = `${formatPart(volume, 0)}%`;
+  const muteText = elements.mute.checked ? " · 静音" : "";
+
+  elements.rhythmSummary.textContent = `当前节奏 ${rhythm} · ${minuteText}`;
+  elements.settingsSummary.textContent = `当前参数：${rhythm} · ${minuteText} · 音量 ${volumeText}${muteText}`;
 }
 
 function focusSessionPanel() {

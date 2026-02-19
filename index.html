@@ -7,62 +7,7 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <main class="app">
-    <section class="panel intro">
-      <p class="eyebrow">Mindful Breathing</p>
-      <h1>呼吸冥想引导</h1>
-      <p class="hint">使用方式：先设置吸气/暂停/呼气与总时长，再点击「开始」。练习中可「暂停/继续」，结束可点「停止并重置」，需要保存时点「下载完整音频」。</p>
-      <p class="support">有问题请联系：<a href="mailto:leevimin@gmail.com">leevimin@gmail.com</a></p>
-    </section>
-
-    <section class="panel controls-panel">
-      <form id="settings-form" class="settings-form" novalidate>
-        <label>
-          吸气（秒）
-          <input id="inhale-seconds" name="inhaleSeconds" type="number" min="1" step="1" value="4" required>
-        </label>
-        <label>
-          暂停1（秒）
-          <input id="hold1-seconds" name="hold1Seconds" type="number" min="0" step="1" value="4" required>
-        </label>
-        <label>
-          呼气（秒）
-          <input id="exhale-seconds" name="exhaleSeconds" type="number" min="1" step="1" value="4" required>
-        </label>
-        <label>
-          暂停2（秒）
-          <input id="hold2-seconds" name="hold2Seconds" type="number" min="0" step="1" value="4" required>
-        </label>
-        <label>
-          总时长（分钟）
-          <input id="total-minutes" name="totalMinutes" type="number" min="1" step="1" value="5" required>
-        </label>
-        <label>
-          音量
-          <input id="volume" name="volume" type="range" min="0" max="100" step="1" value="80">
-        </label>
-        <label class="mute">
-          <input id="mute" name="mute" type="checkbox">
-          <span>静音</span>
-        </label>
-      </form>
-
-      <div class="button-row">
-        <button id="start-button" type="button">开始</button>
-        <button id="pause-button" type="button" disabled>暂停</button>
-        <button id="resume-button" type="button" disabled>继续</button>
-        <button id="stop-button" type="button" disabled>停止并重置</button>
-      </div>
-      <div class="export-row">
-        <button id="download-mix-button" type="button">下载完整音频</button>
-      </div>
-      <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
-      <p id="download-status" class="download-status" role="status" aria-live="polite"></p>
-      <div class="progress-wrap" aria-hidden="true">
-        <progress id="download-progress" max="100" value="0"></progress>
-      </div>
-    </section>
-
+  <main id="app-root" class="app mode-setup">
     <section id="session-panel" class="panel session-panel">
       <div id="orb-wrapper" class="orb-wrapper phase-idle">
         <div class="flow-layer flow-a"></div>
@@ -82,6 +27,68 @@
         <p id="total-remaining" class="total-remaining">总剩余 00:00</p>
       </div>
     </section>
+
+    <section id="controls-panel" class="panel controls-panel">
+      <div class="controls-head">
+        <p class="controls-title">参数与控制</p>
+        <button id="toggle-settings-button" class="ghost-toggle" type="button" aria-expanded="true">收起参数</button>
+      </div>
+      <p id="rhythm-summary" class="rhythm-summary">当前节奏 4-4-4-4 · 5 分钟</p>
+      <p id="settings-summary" class="settings-summary">当前参数：4-4-4-4 · 5 分钟 · 音量 80%</p>
+
+      <div id="settings-body" class="settings-body">
+        <form id="settings-form" class="settings-form" novalidate>
+          <label>
+            吸气（秒）
+            <input id="inhale-seconds" name="inhaleSeconds" type="number" min="1" step="1" value="4" required>
+          </label>
+          <label>
+            暂停1（秒）
+            <input id="hold1-seconds" name="hold1Seconds" type="number" min="0" step="1" value="4" required>
+          </label>
+          <label>
+            呼气（秒）
+            <input id="exhale-seconds" name="exhaleSeconds" type="number" min="1" step="1" value="4" required>
+          </label>
+          <label>
+            暂停2（秒）
+            <input id="hold2-seconds" name="hold2Seconds" type="number" min="0" step="1" value="4" required>
+          </label>
+          <label>
+            总时长（分钟）
+            <input id="total-minutes" name="totalMinutes" type="number" min="1" step="1" value="5" required>
+          </label>
+          <label>
+            音量
+            <input id="volume" name="volume" type="range" min="0" max="100" step="1" value="80">
+          </label>
+          <label class="mute">
+            <input id="mute" name="mute" type="checkbox">
+            <span>静音</span>
+          </label>
+        </form>
+      </div>
+
+      <div class="action-dock">
+        <div class="button-row">
+          <button id="start-button" type="button">开始</button>
+          <button id="pause-button" type="button" disabled>暂停</button>
+          <button id="resume-button" type="button" disabled>继续</button>
+          <button id="stop-button" type="button" disabled>停止并重置</button>
+        </div>
+        <div class="export-row">
+          <button id="download-mix-button" type="button">下载完整音频</button>
+        </div>
+      </div>
+
+      <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+      <p id="download-status" class="download-status" role="status" aria-live="polite"></p>
+      <div class="progress-wrap" aria-hidden="true">
+        <progress id="download-progress" max="100" value="0"></progress>
+      </div>
+    </section>
+
+    <footer class="support-footer">有问题请联系：<a href="mailto:leevimin@gmail.com">leevimin@gmail.com</a></footer>
   </main>
 
   <script src="app.js"></script>
