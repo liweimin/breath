@@ -7,17 +7,54 @@ const PHASES = [
   { key: "hold2", label: "暂停（呼后）", type: "hold", durationKey: "hold2Seconds" }
 ];
 
+const PRESET_KEY_CUSTOM = "custom";
+const PRESETS = [
+  {
+    key: "balanced",
+    label: "平衡 4-4-4-4",
+    settings: {
+      inhaleSeconds: 4,
+      hold1Seconds: 4,
+      exhaleSeconds: 4,
+      hold2Seconds: 4,
+      totalMinutes: 10
+    }
+  },
+  {
+    key: "relax478",
+    label: "放松 4-7-8",
+    settings: {
+      inhaleSeconds: 4,
+      hold1Seconds: 7,
+      exhaleSeconds: 8,
+      hold2Seconds: 0,
+      totalMinutes: 8
+    }
+  },
+  {
+    key: "rhythm6060",
+    label: "节律 6-0-6-0",
+    settings: {
+      inhaleSeconds: 6,
+      hold1Seconds: 0,
+      exhaleSeconds: 6,
+      hold2Seconds: 0,
+      totalMinutes: 10
+    }
+  }
+];
+
 const SAMPLE_FILES = {
   exhale: "assets/audio/exhale-light-short.mp3"
 };
 
 const elements = {
   appRoot: document.getElementById("app-root"),
+  configColumn: document.getElementById("config-column"),
   controlsPanel: document.getElementById("controls-panel"),
   settingsBody: document.getElementById("settings-body"),
   toggleSettingsButton: document.getElementById("toggle-settings-button"),
-  settingsSummary: document.getElementById("settings-summary"),
-  rhythmSummary: document.getElementById("rhythm-summary"),
+  presetButtons: Array.from(document.querySelectorAll(".preset-chip[data-preset-key]")),
   form: document.getElementById("settings-form"),
   inhale: document.getElementById("inhale-seconds"),
   hold1: document.getElementById("hold1-seconds"),
@@ -25,14 +62,14 @@ const elements = {
   hold2: document.getElementById("hold2-seconds"),
   totalMinutes: document.getElementById("total-minutes"),
   volume: document.getElementById("volume"),
-  mute: document.getElementById("mute"),
+  sessionToggleButton: document.getElementById("session-toggle-button"),
   startButton: document.getElementById("start-button"),
   pauseButton: document.getElementById("pause-button"),
   resumeButton: document.getElementById("resume-button"),
   stopButton: document.getElementById("stop-button"),
   downloadMixButton: document.getElementById("download-mix-button"),
-  phaseName: document.getElementById("phase-name"),
-  phaseRemaining: document.getElementById("phase-remaining"),
+  phaseCountdown: document.getElementById("phase-countdown"),
+  totalProgressFill: document.getElementById("total-progress-fill"),
   totalRemaining: document.getElementById("total-remaining"),
   feedback: document.getElementById("feedback"),
   downloadStatus: document.getElementById("download-status"),
@@ -54,6 +91,7 @@ const state = {
   elapsedWhenPausedMs: 0,
   totalDurationMs: 0,
   setupSettingsCollapsed: false,
+  selectedPresetKey: PRESETS[0].key,
   stopAfterCycle: false,
   timerId: null,
   currentOrbScale: 1,
@@ -443,6 +481,7 @@ initialize();
 
 function initialize() {
   loadSettings();
+  syncPresetButtons();
   updateSettingsSummary();
   bindEvents();
   setSettingsCollapsed(state.setupSettingsCollapsed);
@@ -451,16 +490,35 @@ function initialize() {
 }
 
 function bindEvents() {
-  elements.startButton.addEventListener("click", handleStart);
-  elements.pauseButton.addEventListener("click", handlePause);
-  elements.resumeButton.addEventListener("click", handleResume);
-  elements.stopButton.addEventListener("click", handleStopReset);
-  elements.downloadMixButton.addEventListener("click", handleDownloadMix);
+  if (elements.startButton) {
+    elements.startButton.addEventListener("click", handleStart);
+  }
+  if (elements.pauseButton) {
+    elements.pauseButton.addEventListener("click", handlePause);
+  }
+  if (elements.resumeButton) {
+    elements.resumeButton.addEventListener("click", handleResume);
+  }
+  if (elements.stopButton) {
+    elements.stopButton.addEventListener("click", handleStopReset);
+  }
+  if (elements.downloadMixButton) {
+    elements.downloadMixButton.addEventListener("click", handleDownloadMix);
+  }
+  if (elements.sessionToggleButton) {
+    elements.sessionToggleButton.addEventListener("click", handleSessionToggle);
+  }
   elements.toggleSettingsButton.addEventListener("click", handleToggleSettings);
+  for (const button of elements.presetButtons) {
+    button.addEventListener("click", handlePresetClick);
+  }
 
-  elements.form.addEventListener("input", () => {
+  elements.form.addEventListener("input", (event) => {
     if (state.runState === "idle" || state.runState === "finished") {
       clearFeedback();
+    }
+    if (isPresetTimingInput(event.target)) {
+      markAsCustomPreset();
     }
     updateSettingsSummary();
     saveSettings();
@@ -472,12 +530,14 @@ function bindEvents() {
     updateSettingsSummary();
     saveSettings();
   });
+}
 
-  elements.mute.addEventListener("change", () => {
-    audio.setMuted(elements.mute.checked);
-    updateSettingsSummary();
-    saveSettings();
-  });
+function handleSessionToggle() {
+  if (state.runState === "running" || state.runState === "paused") {
+    handleStopReset();
+    return;
+  }
+  handleStart();
 }
 
 function handleToggleSettings() {
@@ -486,6 +546,15 @@ function handleToggleSettings() {
   }
   state.setupSettingsCollapsed = !state.setupSettingsCollapsed;
   setSettingsCollapsed(state.setupSettingsCollapsed);
+  saveSettings();
+}
+
+function handlePresetClick(event) {
+  if (isSessionActive()) {
+    return;
+  }
+  const key = event.currentTarget.dataset.presetKey;
+  selectPreset(key, true);
 }
 
 async function handleStart() {
@@ -515,7 +584,7 @@ async function handleStart() {
   state.lastMotionDirection = "none";
 
   audio.setVolume(state.settings.volume / 100);
-  audio.setMuted(state.settings.mute);
+  audio.setMuted(false);
   audio.startRain();
 
   clearFeedback();
@@ -557,6 +626,11 @@ function handleResume() {
 
 function handleStopReset() {
   resetToIdle();
+  state.setupSettingsCollapsed = false;
+  setSettingsCollapsed(false);
+  saveSettings();
+  focusControlsPanel();
+  setFeedback("已停止，可调整参数后重新开始。");
 }
 
 function startTicker() {
@@ -631,7 +705,6 @@ function advancePhase(nowMs) {
 }
 
 function updatePhaseVisual(phase, durationSec) {
-  elements.phaseName.textContent = phase.label;
   setOrbPhase(phase.type);
 
   if (phase.type === "inhale") {
@@ -678,16 +751,38 @@ function setOrbPhase(type) {
 function renderSession(nowMs) {
   const phaseRemainingMs = Math.max(0, state.phaseEndAtMs - nowMs);
   const totalRemainingMs = Math.max(0, state.totalDurationMs - getElapsedMs(nowMs));
-  elements.phaseRemaining.textContent = `阶段剩余 ${formatMs(phaseRemainingMs)}`;
-  elements.totalRemaining.textContent = `总剩余 ${formatMs(totalRemainingMs)}`;
+  const phaseSeconds = state.runState === "running" || state.runState === "paused"
+    ? Math.max(1, Math.ceil(phaseRemainingMs / 1000))
+    : Math.max(0, Math.ceil(phaseRemainingMs / 1000));
+  const phaseText = String(phaseSeconds);
+  const totalText = formatMs(totalRemainingMs);
+  const totalRatio = state.totalDurationMs > 0
+    ? clamp(totalRemainingMs / state.totalDurationMs, 0, 1)
+    : 1;
+
+  if (elements.phaseCountdown) {
+    elements.phaseCountdown.textContent = phaseText;
+  }
+  if (elements.totalProgressFill) {
+    elements.totalProgressFill.style.width = `${(totalRatio * 100).toFixed(2)}%`;
+  }
+  if (elements.totalRemaining) {
+    elements.totalRemaining.textContent = `总剩余 ${totalText}`;
+  }
 }
 
 function renderIdleView() {
   setOrbPhase("idle");
   setOrbScale(1, 0.24);
-  elements.phaseName.textContent = "未开始";
-  elements.phaseRemaining.textContent = "阶段剩余 00:00";
-  elements.totalRemaining.textContent = "总剩余 00:00";
+  if (elements.phaseCountdown) {
+    elements.phaseCountdown.textContent = "0";
+  }
+  if (elements.totalProgressFill) {
+    elements.totalProgressFill.style.width = "100%";
+  }
+  if (elements.totalRemaining) {
+    elements.totalRemaining.textContent = "总剩余 00:00";
+  }
 }
 
 function finishSession() {
@@ -731,12 +826,30 @@ function updateButtons() {
   const idleLike = state.runState === "idle" || state.runState === "finished";
   const active = isSessionActive();
 
-  elements.startButton.disabled = !idleLike;
-  elements.pauseButton.disabled = !running;
-  elements.resumeButton.disabled = !paused;
-  elements.stopButton.disabled = idleLike;
-  elements.downloadMixButton.disabled = state.exportInProgress;
+  if (elements.startButton) {
+    elements.startButton.disabled = !idleLike;
+  }
+  if (elements.pauseButton) {
+    elements.pauseButton.disabled = !running;
+  }
+  if (elements.resumeButton) {
+    elements.resumeButton.disabled = !paused;
+  }
+  if (elements.stopButton) {
+    elements.stopButton.disabled = idleLike;
+  }
+  if (elements.downloadMixButton) {
+    elements.downloadMixButton.disabled = state.exportInProgress;
+  }
   elements.toggleSettingsButton.disabled = active;
+  for (const button of elements.presetButtons) {
+    button.disabled = active;
+  }
+  if (elements.sessionToggleButton) {
+    elements.sessionToggleButton.disabled = state.exportInProgress;
+    elements.sessionToggleButton.classList.toggle("is-running", running || paused);
+    elements.sessionToggleButton.setAttribute("aria-label", running || paused ? "停止练习" : "开始练习");
+  }
   setSettingsLocked(active);
   syncLayoutMode(active);
 }
@@ -766,7 +879,8 @@ function setSettingsCollapsed(collapsed) {
   elements.controlsPanel.classList.toggle("settings-collapsed", collapsed);
   elements.settingsBody.setAttribute("aria-hidden", collapsed ? "true" : "false");
   elements.toggleSettingsButton.setAttribute("aria-expanded", collapsed ? "false" : "true");
-  elements.toggleSettingsButton.textContent = collapsed ? "展开参数" : "收起参数";
+  elements.toggleSettingsButton.setAttribute("aria-label", collapsed ? "展开参数" : "收起参数");
+  elements.toggleSettingsButton.title = collapsed ? "展开参数" : "收起参数";
 }
 
 function updateSettingsSummary() {
@@ -783,10 +897,105 @@ function updateSettingsSummary() {
   const rhythm = `${formatPart(inhale, 1)}-${formatPart(hold1)}-${formatPart(exhale, 1)}-${formatPart(hold2)}`;
   const minuteText = `${formatPart(totalMinutes, 1)} 分钟`;
   const volumeText = `${formatPart(volume, 0)}%`;
-  const muteText = elements.mute.checked ? " · 静音" : "";
+  if (elements.sessionToggleButton) {
+    elements.sessionToggleButton.title = `当前节奏 ${rhythm} · ${minuteText} · 音量 ${volumeText}`;
+  }
+}
 
-  elements.rhythmSummary.textContent = `当前节奏 ${rhythm} · ${minuteText}`;
-  elements.settingsSummary.textContent = `当前参数：${rhythm} · ${minuteText} · 音量 ${volumeText}${muteText}`;
+function selectPreset(presetKey, applySettings = false) {
+  const safeKey = getPresetByKey(presetKey) ? presetKey : PRESET_KEY_CUSTOM;
+  const preset = getPresetByKey(safeKey);
+
+  if (applySettings && preset) {
+    applySettingsToInputs(preset.settings);
+  }
+
+  state.selectedPresetKey = safeKey;
+  syncPresetButtons();
+
+  if (!isSessionActive()) {
+    if (safeKey === PRESET_KEY_CUSTOM) {
+      state.setupSettingsCollapsed = false;
+      setSettingsCollapsed(false);
+    } else if (applySettings) {
+      state.setupSettingsCollapsed = true;
+      setSettingsCollapsed(true);
+    }
+  }
+
+  updateSettingsSummary();
+  saveSettings();
+}
+
+function markAsCustomPreset() {
+  if (state.selectedPresetKey === PRESET_KEY_CUSTOM) {
+    return;
+  }
+  state.selectedPresetKey = PRESET_KEY_CUSTOM;
+  syncPresetButtons();
+  state.setupSettingsCollapsed = false;
+  setSettingsCollapsed(false);
+}
+
+function syncPresetButtons() {
+  for (const button of elements.presetButtons) {
+    const key = button.dataset.presetKey;
+    const isActive = key === state.selectedPresetKey;
+    button.classList.toggle("is-active", isActive);
+    button.setAttribute("aria-pressed", isActive ? "true" : "false");
+  }
+}
+
+function getPresetByKey(key) {
+  return PRESETS.find((preset) => preset.key === key) || null;
+}
+
+function detectPresetKeyFromInputs() {
+  const current = readSettingsFromInputs();
+  for (const preset of PRESETS) {
+    if (isSamePresetSettings(current, preset.settings)) {
+      return preset.key;
+    }
+  }
+  return PRESET_KEY_CUSTOM;
+}
+
+function isSamePresetSettings(current, presetSettings) {
+  return (
+    current.inhaleSeconds === presetSettings.inhaleSeconds &&
+    current.hold1Seconds === presetSettings.hold1Seconds &&
+    current.exhaleSeconds === presetSettings.exhaleSeconds &&
+    current.hold2Seconds === presetSettings.hold2Seconds &&
+    current.totalMinutes === presetSettings.totalMinutes
+  );
+}
+
+function isPresetTimingInput(target) {
+  return (
+    target === elements.inhale ||
+    target === elements.hold1 ||
+    target === elements.exhale ||
+    target === elements.hold2 ||
+    target === elements.totalMinutes
+  );
+}
+
+function readSettingsFromInputs() {
+  return {
+    inhaleSeconds: parseInteger(elements.inhale.value),
+    hold1Seconds: parseInteger(elements.hold1.value),
+    exhaleSeconds: parseInteger(elements.exhale.value),
+    hold2Seconds: parseInteger(elements.hold2.value),
+    totalMinutes: parseInteger(elements.totalMinutes.value)
+  };
+}
+
+function applySettingsToInputs(settings) {
+  elements.inhale.value = String(settings.inhaleSeconds);
+  elements.hold1.value = String(settings.hold1Seconds);
+  elements.exhale.value = String(settings.exhaleSeconds);
+  elements.hold2.value = String(settings.hold2Seconds);
+  elements.totalMinutes.value = String(settings.totalMinutes);
 }
 
 function focusSessionPanel() {
@@ -795,6 +1004,23 @@ function focusSessionPanel() {
   }
   window.setTimeout(() => {
     elements.sessionPanel.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, 80);
+}
+
+function focusControlsPanel() {
+  if (!elements.controlsPanel) {
+    return;
+  }
+
+  if (window.matchMedia("(min-width: 960px)").matches) {
+    if (elements.configColumn && elements.configColumn.scrollHeight > elements.configColumn.clientHeight) {
+      elements.configColumn.scrollTo({ top: 0, behavior: "smooth" });
+    }
+    return;
+  }
+
+  window.setTimeout(() => {
+    elements.controlsPanel.scrollIntoView({ behavior: "smooth", block: "start" });
   }, 80);
 }
 
@@ -1271,8 +1497,7 @@ function parseAndValidateSettings() {
     exhaleSeconds: parseInteger(elements.exhale.value),
     hold2Seconds: parseInteger(elements.hold2.value),
     totalMinutes: parseInteger(elements.totalMinutes.value),
-    volume: parseInteger(elements.volume.value),
-    mute: elements.mute.checked
+    volume: parseInteger(elements.volume.value)
   };
 
   if (!Number.isInteger(settings.inhaleSeconds) || settings.inhaleSeconds < 1) {
@@ -1305,7 +1530,8 @@ function saveSettings() {
     hold2Seconds: parseInteger(elements.hold2.value),
     totalMinutes: parseInteger(elements.totalMinutes.value),
     volume: parseInteger(elements.volume.value),
-    mute: elements.mute.checked
+    selectedPresetKey: state.selectedPresetKey,
+    setupSettingsCollapsed: state.setupSettingsCollapsed
   };
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
@@ -1322,8 +1548,11 @@ function loadSettings() {
     stored = null;
   }
   if (!stored) {
+    applySettingsToInputs(PRESETS[0].settings);
+    state.selectedPresetKey = PRESETS[0].key;
+    state.setupSettingsCollapsed = true;
     audio.setVolume(Number(elements.volume.value) / 100);
-    audio.setMuted(elements.mute.checked);
+    audio.setMuted(false);
     return;
   }
 
@@ -1335,13 +1564,25 @@ function loadSettings() {
     setIfValid(elements.hold2, parsed.hold2Seconds, 0);
     setIfValid(elements.totalMinutes, parsed.totalMinutes, 1);
     setIfValid(elements.volume, parsed.volume, 0, 100);
-    elements.mute.checked = Boolean(parsed.mute);
+    if (parsed.selectedPresetKey === PRESET_KEY_CUSTOM || getPresetByKey(parsed.selectedPresetKey)) {
+      state.selectedPresetKey = parsed.selectedPresetKey;
+    } else {
+      state.selectedPresetKey = detectPresetKeyFromInputs();
+    }
+    state.setupSettingsCollapsed = Boolean(parsed.setupSettingsCollapsed);
   } catch (error) {
+    state.selectedPresetKey = detectPresetKeyFromInputs();
     return;
   }
 
+  if (state.selectedPresetKey !== PRESET_KEY_CUSTOM && !getPresetByKey(state.selectedPresetKey)) {
+    state.selectedPresetKey = detectPresetKeyFromInputs();
+  }
+  if (state.selectedPresetKey === PRESET_KEY_CUSTOM) {
+    state.setupSettingsCollapsed = false;
+  }
+
   audio.setVolume(Number(elements.volume.value) / 100);
-  audio.setMuted(elements.mute.checked);
 }
 
 function setIfValid(input, value, min, max = Number.POSITIVE_INFINITY) {

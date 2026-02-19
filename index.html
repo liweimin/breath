@@ -34,92 +34,227 @@
       }
     }
   </script>
+  <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "新手先用哪个预设？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "建议先使用平衡呼吸 4-4-4-4，节奏规则且容易上手。美国心脏协会与 Cleveland Clinic 的呼吸练习资料都包含类似的等节奏呼吸方法。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "每次练多久比较合适？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "多数用户可从 5 到 10 分钟开始，再根据体感逐步延长。NHS 的减压呼吸建议中也强调短时、规律练习。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "4-7-8 呼吸适合什么场景？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "4-7-8 常用于放松与睡前安静场景。该比例由 Andrew Weil 医生广泛推广，核心是延长呼气并保持节奏。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "6-0-6-0 预设有什么特点？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "6-0-6-0 属于对称慢呼吸，呼吸频率约为每分钟 5 次。与慢节律呼吸相关的研究常讨论约 0.1 Hz 附近的呼吸节奏与心率变异性指标关系。"
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "为什么手机浏览器之间可能有声音差异？",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "不同浏览器对音频解码与自动播放策略实现存在差异。若遇到兼容问题，建议优先使用主流浏览器（如 Chrome）并在用户手势后开始播放。"
+          }
+        }
+      ]
+    }
+  </script>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <main id="app-root" class="app mode-setup">
     <h1 class="sr-only">呼吸冥想引导在线呼吸练习工具</h1>
-    <section id="session-panel" class="panel session-panel">
-      <div id="orb-wrapper" class="orb-wrapper phase-idle">
-        <div class="flow-layer flow-a"></div>
-        <div class="flow-layer flow-b"></div>
-        <div class="particle p1"></div>
-        <div class="particle p2"></div>
-        <div class="particle p3"></div>
-        <div class="particle p4"></div>
-        <div class="particle p5"></div>
-        <div class="particle p6"></div>
-        <div class="orb-glow"></div>
-        <div id="breath-orb" class="breath-orb"></div>
-      </div>
-      <div class="session-stats">
-        <p id="phase-name" class="phase-name">未开始</p>
-        <p id="phase-remaining" class="phase-remaining">阶段剩余 00:00</p>
-        <p id="total-remaining" class="total-remaining">总剩余 00:00</p>
-      </div>
-    </section>
-
-    <section id="controls-panel" class="panel controls-panel">
-      <div class="controls-head">
-        <p class="controls-title">参数与控制</p>
-        <button id="toggle-settings-button" class="ghost-toggle" type="button" aria-expanded="true">收起参数</button>
-      </div>
-      <p id="rhythm-summary" class="rhythm-summary">当前节奏 4-4-4-4 · 5 分钟</p>
-      <p id="settings-summary" class="settings-summary">当前参数：4-4-4-4 · 5 分钟 · 音量 80%</p>
-
-      <div id="settings-body" class="settings-body">
-        <form id="settings-form" class="settings-form" novalidate>
-          <label>
-            吸气（秒）
-            <input id="inhale-seconds" name="inhaleSeconds" type="number" min="1" step="1" value="4" required>
-          </label>
-          <label>
-            暂停1（秒）
-            <input id="hold1-seconds" name="hold1Seconds" type="number" min="0" step="1" value="4" required>
-          </label>
-          <label>
-            呼气（秒）
-            <input id="exhale-seconds" name="exhaleSeconds" type="number" min="1" step="1" value="4" required>
-          </label>
-          <label>
-            暂停2（秒）
-            <input id="hold2-seconds" name="hold2Seconds" type="number" min="0" step="1" value="4" required>
-          </label>
-          <label>
-            总时长（分钟）
-            <input id="total-minutes" name="totalMinutes" type="number" min="1" step="1" value="5" required>
-          </label>
-          <label>
-            音量
-            <input id="volume" name="volume" type="range" min="0" max="100" step="1" value="80">
-          </label>
-          <label class="mute">
-            <input id="mute" name="mute" type="checkbox">
-            <span>静音</span>
-          </label>
-        </form>
-      </div>
-
-      <div class="action-dock">
-        <div class="button-row">
-          <button id="start-button" type="button">开始</button>
-          <button id="pause-button" type="button" disabled>暂停</button>
-          <button id="resume-button" type="button" disabled>继续</button>
-          <button id="stop-button" type="button" disabled>停止并重置</button>
+    <div class="main-column left-column">
+      <section id="session-panel" class="panel session-panel">
+        <div id="orb-wrapper" class="orb-wrapper phase-idle">
+          <div class="flow-layer flow-a"></div>
+          <div class="flow-layer flow-b"></div>
+          <div class="particle p1"></div>
+          <div class="particle p2"></div>
+          <div class="particle p3"></div>
+          <div class="particle p4"></div>
+          <div class="particle p5"></div>
+          <div class="particle p6"></div>
+          <div class="orb-glow"></div>
+          <p id="phase-countdown" class="orb-center-timer">0</p>
+          <div class="orb-total-progress" aria-hidden="true">
+            <span id="total-progress-fill" class="orb-total-progress-fill"></span>
+          </div>
+          <div id="breath-orb" class="breath-orb"></div>
         </div>
-        <div class="export-row">
-          <button id="download-mix-button" type="button">下载完整音频</button>
+        <div class="session-stats">
+          <button id="session-toggle-button" class="session-toggle-button" type="button" aria-label="开始练习">
+            <svg class="icon icon-play" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M8 5.2v13.6l10.8-6.8z"></path>
+            </svg>
+            <svg class="icon icon-stop" viewBox="0 0 24 24" aria-hidden="true">
+              <rect x="7" y="7" width="10" height="10" rx="2"></rect>
+            </svg>
+          </button>
         </div>
-      </div>
+        <p id="total-remaining" class="sr-only" aria-live="polite">总剩余 00:00</p>
 
-      <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
-      <p id="download-status" class="download-status" role="status" aria-live="polite"></p>
-      <div class="progress-wrap" aria-hidden="true">
-        <progress id="download-progress" max="100" value="0"></progress>
-      </div>
-    </section>
+        <div class="action-dock session-action-dock">
+          <div class="button-row">
+            <button id="start-button" class="feature-hidden" type="button" aria-hidden="true" tabindex="-1">开始</button>
+            <button id="stop-button" class="feature-hidden" type="button" disabled aria-hidden="true" tabindex="-1">停止</button>
+            <button id="pause-button" class="feature-hidden" type="button" disabled aria-hidden="true" tabindex="-1">暂停</button>
+            <button id="resume-button" class="feature-hidden" type="button" disabled aria-hidden="true" tabindex="-1">继续</button>
+          </div>
+          <div class="export-row">
+            <button id="download-mix-button" class="feature-hidden" type="button" aria-hidden="true" tabindex="-1">下载完整音频</button>
+          </div>
+        </div>
 
-    <footer class="support-footer">有问题请联系：<a href="mailto:leevimin@gmail.com">leevimin@gmail.com</a></footer>
+        <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+        <p id="download-status" class="download-status" role="status" aria-live="polite"></p>
+        <div class="progress-wrap" aria-hidden="true">
+          <progress id="download-progress" max="100" value="0"></progress>
+        </div>
+      </section>
+
+      <footer class="support-footer">
+        有问题请联系：<a href="mailto:leevimin@gmail.com">leevimin@gmail.com</a>
+        <span class="sep">｜</span>
+        开源地址：<a href="https://github.com/liweimin/breath" target="_blank" rel="noopener noreferrer">github.com/liweimin/breath</a>
+      </footer>
+    </div>
+
+    <div id="config-column" class="main-column right-column">
+      <section id="controls-panel" class="panel controls-panel">
+        <div class="controls-head">
+          <p class="controls-title">参数与控制</p>
+          <button id="toggle-settings-button" class="ghost-toggle" type="button" aria-expanded="true" aria-label="收起参数">
+            <svg class="icon icon-chevron" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M6 9l6 6 6-6"></path>
+            </svg>
+          </button>
+        </div>
+        <div id="preset-group" class="preset-group" role="group" aria-label="呼吸预设">
+          <button type="button" class="preset-chip" data-preset-key="balanced" aria-pressed="false">平衡 4-4-4-4</button>
+          <button type="button" class="preset-chip" data-preset-key="relax478" aria-pressed="false">放松 4-7-8</button>
+          <button type="button" class="preset-chip" data-preset-key="rhythm6060" aria-pressed="false">节律 6-0-6-0</button>
+          <button type="button" class="preset-chip" data-preset-key="custom" aria-pressed="false">自定义</button>
+        </div>
+        <div id="settings-body" class="settings-body">
+          <form id="settings-form" class="settings-form" novalidate>
+            <label>
+              吸气（秒）
+              <input id="inhale-seconds" name="inhaleSeconds" type="number" min="1" step="1" value="4" required>
+            </label>
+            <label>
+              暂停1（秒）
+              <input id="hold1-seconds" name="hold1Seconds" type="number" min="0" step="1" value="4" required>
+            </label>
+            <label>
+              呼气（秒）
+              <input id="exhale-seconds" name="exhaleSeconds" type="number" min="1" step="1" value="4" required>
+            </label>
+            <label>
+              暂停2（秒）
+              <input id="hold2-seconds" name="hold2Seconds" type="number" min="0" step="1" value="4" required>
+            </label>
+            <label>
+              总时长（分钟）
+              <input id="total-minutes" name="totalMinutes" type="number" min="1" step="1" value="5" required>
+            </label>
+            <label>
+              音量
+              <input id="volume" name="volume" type="range" min="0" max="100" step="1" value="80">
+            </label>
+          </form>
+        </div>
+
+      </section>
+
+      <section id="seo-content" class="panel seo-content" aria-label="呼吸方法说明与常见问题">
+        <details class="seo-fold">
+          <summary>预设说明与常见问题（点击展开）</summary>
+          <div class="seo-fold-body">
+            <article class="story-card" aria-label="项目由来">
+              <h2>这个项目的由来</h2>
+              <p>这是我用 Vibe Coding（Codex）做的一个小工具。</p>
+              <p>我一直喜欢冥想，也发现 vibe coding 里常有等待和不确定。与其焦躁，不如用几轮呼吸把注意力收回来。这个页面是做给自己，也给同样在路上的人。</p>
+            </article>
+
+            <h2>呼吸预设说明</h2>
+            <p class="seo-intro">下列预设用于日常放松与专注训练，你可以先用预设上手，再切换到“自定义”做个性化节奏。</p>
+
+            <article class="seo-card">
+              <h3>平衡呼吸（4-4-4-4）</h3>
+              <p>吸气、停顿、呼气、停顿保持相同节奏，适合新手建立稳定呼吸感。</p>
+              <p class="seo-use">建议场景：工作间隙、切换任务前的 5-10 分钟。</p>
+            </article>
+
+            <article class="seo-card">
+              <h3>放松呼吸（4-7-8）</h3>
+              <p>延长呼气时长，帮助身体逐步进入放松节奏。练习初期建议少量循环，避免过度用力。</p>
+              <p class="seo-use">建议场景：睡前放松、情绪紧绷时的短时练习。</p>
+            </article>
+
+            <article class="seo-card">
+              <h3>节律呼吸（6-0-6-0）</h3>
+              <p>吸呼对称、无停顿，节律清晰，适合保持稳定专注与呼吸连贯性。</p>
+              <p class="seo-use">建议场景：晨间唤醒后、专注工作前的节奏准备。</p>
+            </article>
+
+            <h2>常见问题</h2>
+            <div class="faq-list">
+              <details class="faq-item">
+                <summary>新手先用哪个预设？</summary>
+                <p>建议先从 4-4-4-4 开始，节奏最直观，便于形成稳定练习习惯。</p>
+              </details>
+              <details class="faq-item">
+                <summary>每次练多久合适？</summary>
+                <p>可以先从 5-10 分钟开始，再根据体感逐步延长，重在规律而非一次很久。</p>
+              </details>
+              <details class="faq-item">
+                <summary>练习时如果头晕怎么办？</summary>
+                <p>请立即减慢节奏或暂停，恢复自然呼吸。后续可缩短练习时长并降低呼吸强度。</p>
+              </details>
+              <details class="faq-item">
+                <summary>为什么不同浏览器声音可能不一致？</summary>
+                <p>主要是音频解码与播放策略差异。遇到问题时，优先使用主流浏览器并在点击“开始”后播放。</p>
+              </details>
+            </div>
+
+            <h2>权威参考</h2>
+            <ul class="source-list">
+              <li><a href="https://www.heart.org/en/healthy-living/healthy-lifestyle/stress-management" target="_blank" rel="noopener noreferrer">American Heart Association - Stress Management & Deep Breathing</a></li>
+              <li><a href="https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/breathing-exercises-for-stress/" target="_blank" rel="noopener noreferrer">NHS - Breathing exercises for stress</a></li>
+              <li><a href="https://www.drweil.com/health-wellness/body-mind-spirit/stress-anxiety/three-breathing-exercises-and-techniques/" target="_blank" rel="noopener noreferrer">Dr. Andrew Weil - 4-7-8 Breathing Exercise</a></li>
+              <li><a href="https://health.clevelandclinic.org/box-breathing-benefits/" target="_blank" rel="noopener noreferrer">Cleveland Clinic - Box Breathing Benefits and Techniques</a></li>
+              <li><a href="https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2017.00222/full" target="_blank" rel="noopener noreferrer">Frontiers (2017) - Resonance Frequency Breathing and HRV</a></li>
+            </ul>
+
+            <p class="disclaimer">免责声明：本页面内容用于日常放松与专注训练，不替代医疗建议。如有心肺疾病、持续不适或焦虑症状，请咨询专业医生。</p>
+          </div>
+        </details>
+      </section>
+    </div>
   </main>
 
   <script src="app.js"></script>
